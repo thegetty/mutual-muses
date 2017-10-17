@@ -250,34 +250,31 @@ release_annotations <- data_frame(
   release_date = ymd_hms(20170801000000, 20170802000000, 20170804000000, 20170814000000, 20170829000000, 20170802000000, 20170804000000, 20170816000000, 20170831000000)
 )
 
-class_per_day <- comb_df %>% 
-  filter(day_of > ymd_hms(20170730000000)) %>% 
+class_per_day <- transcription_classifications %>% 
+  filter(day_of > ymd(20170725)) %>% 
   add_column(counter = 1) %>% 
   bootr(group_vars = c("day_of", "is_weekend"), source_var = "counter", boot_fun = sum)
 
 class_per_day %>% 
   ggplot(aes(x = day_of, y = boot_med)) +
-  #geom_line() +
   geom_errorbar(aes(ymin = boot_low, ymax = boot_high), alpha = 0.5) +
-  geom_point(aes(color = is_weekend), size = 3) +
+  geom_point(aes(color = is_weekend), size = 1) +
   theme(legend.position = "none") +
   labs(x = NULL, y = "No. of transcriptions") +
   geom_vline(data = release_annotations, aes(xintercept = release_date), alpha = 0.5) +
-  geom_label_repel(data = release_annotations, aes(x = release_date, y = 1000, label = year), min.segment.length = unit(0, "lines"))
+  geom_label_repel(data = release_annotations, aes(x = release_date, y = 750, label = year), min.segment.length = unit(0, "lines"))
 ```
 
 ## Transcription lengths
 
 ```{r}
-trans_medians <- comb_df %>% 
-  group_by(phase) %>% 
-  summarize(median_length = median(charcount))
+trans_medians <- transcription_classifications %>% 
+  summarize(median_length = median(charcount, na.rm = TRUE))
 
-comb_df %>% 
+transcription_classifications %>% 
   ggplot() +
-  geom_histogram(aes(x = charcount, fill = phase), alpha = 0.5) +
-  geom_vline(data = trans_medians, aes(xintercept = median_length, color = phase)) +
-  facet_wrap(~phase, scales = "free_y", ncol = 1) +
+  geom_histogram(aes(x = charcount)) +
+  geom_vline(data = trans_medians, aes(xintercept = median_length)) +
   labs(x = "No. of characters in the transcription", y = "No. of transcriptions")
 ```
 
@@ -285,15 +282,13 @@ comb_df %>%
 ## Transcription time
 
 ```{r time_spent_transcribing}
-med_times <- comb_df %>% 
-  group_by(phase) %>% 
-  summarize(med_min = median(minutes_transcribing))
+med_times <- transcription_classifications %>% 
+  summarize(med_min = median(minutes_annotating, na.rm = TRUE))
 
-ggplot(comb_df, aes(x = minutes_transcribing, fill = phase)) +
-  geom_histogram(alpha = 0.4) +
-  geom_vline(data = med_times, aes(xintercept = med_min, color = phase)) +
+ggplot(transcription_classifications, aes(x = minutes_annotating)) +
+  geom_histogram() +
+  geom_vline(data = med_times, aes(xintercept = med_min)) +
   xlim(0, 30) +
-  facet_wrap(~ phase, scales = "free_y", ncol = 1) +
   labs(x = "Minutes transcribing", y = "No. of transcriptions")
 
 ```
@@ -302,28 +297,19 @@ ggplot(comb_df, aes(x = minutes_transcribing, fill = phase)) +
 ## Use of `[unclear]` tags.
 
 ```{r unclear_counts}
-ratio_with_unclear <- mean(class_df()$unclear_count > 0)
+ratio_with_unclear <- mean(transcription_classifications$unclear_count > 0)
 
-ggplot(class_df(), aes(x = unclear_count)) +
+ggplot(transcription_classifications, aes(x = unclear_count)) +
   geom_histogram() +
   labs(x = "Times '[unclear]' used", y = "No. of transcriptions")
 ```
  
 About `r scales::percent(ratio_with_unclear)` of transcriptions used the `[unclear]` tag at least once.
  
-## Use of `[unclear]` tags.
-
-```{r unclear_text_examples}
-unclear_words <- re_match_all(class_df()$annotation_text, "\\[unclear\\](?<unclear_text>.*?)\\[/unclear\\]") %>% 
-  unnest()
-
-sample(unclear_words$unclear_text, size = 70, replace = FALSE)
-```
-
 ## Special characters
 
 ```{r non_ascii}
-ratio_special_chars <- mean(class_df()$contains_special)
+ratio_special_chars <- mean(transcription_classifications$contains_special)
 ```
 
 `r scales::percent(ratio_special_chars)` of transcriptions were marked as "Contains special characters"
@@ -331,7 +317,7 @@ ratio_special_chars <- mean(class_df()$contains_special)
 ```{r non_ascii_examples}
 diacritic_chars <- "[àèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ]"
 
-class_df() %>% 
+transcription_classifications %>% 
   bind_re_match(annotation_text, paste0("(?<spec_char_context>.{0,20}", diacritic_chars, "+.{0,20})")) %>% 
   select(spec_char_context) %>% 
   na.omit() %>% 
@@ -344,7 +330,7 @@ Even when excluding blank transcriptions, there a handful of transcriptions with
 
 ```{r create_corpora}
 # Produce a list of corpus objects
-trans_corpus <- class_df() %>% 
+trans_corpus <- transcription_classifications %>% 
   group_by(file_name) %>% 
   split(.$file_name) %>% 
   map(function(x) {
@@ -364,10 +350,6 @@ Compared to the beta results, transcriptions here tend to have more consensus.
 
 High-disagreement docs are ones with too few transcriptions. Suggest re-loading some docs.
 
-```{r beta_similarity}
-
-```
-
 ```{r all_pairwise_similarity}
 all_dissimilarity <- trans_corpus %>% 
   map(pairwise_compare, f = jaccard_dissimilarity, progress = FALSE) %>% 
@@ -377,12 +359,12 @@ all_dissimilarity <- trans_corpus %>%
       median_dissimilarity = median(x, na.rm = TRUE),
       max_dissimilarity = max(x, na.rm = TRUE),
       min_dissimilarity = min(x, na.rm = TRUE))
-  }, .id = "subject_id")
+  }, .id = "file_name")
 ```
 
 ```{r overall_dissimilarity}
 all_dissimilarity %>% 
-  gather(metric, value, -subject_id) %>% 
+  gather(metric, value, -file_name) %>% 
   ggplot(aes(x = metric, y = value, fill = metric)) +
   geom_boxplot() +
   ylim(0, 1) +
@@ -408,9 +390,9 @@ transcription_ratios <- ratio_contained %>%
     classification_id = as.integer(a)) %>% 
   select(-a)
 
-winning_df <- class_df() %>% 
+winning_df <- transcription_classifications %>% 
   left_join(transcription_ratios, by = c("file_name", "classification_id")) %>% 
-  left_join(all_dissimilarity, by = c("file_name" = "subject_id")) %>% 
+  left_join(all_dissimilarity, by = "file_name") %>% 
   group_by(file_name) %>% 
   mutate(
     selected_as_winning = row_number(desc(median_ratio)) == 1,
