@@ -201,50 +201,40 @@ intermediate_process <- parse_zooniverse_metadata(raw_export)
 
 image_workflows <- c("5.17")
 
-transcription_workflows <- c("28.76")
+transcription_workflows <- c("28.76", "29.76")
 
 drawing_classifications <- parse_image_annotations(intermediate_process, workflow_versions = image_workflows) %>% 
   # Get rid of one weird classification that contained transcription answers
   # despite having the workflow of a drawing classification
   filter(classification_id != 73150258)
 
-comb_df <- bind_rows(
-  current = filter(processed_export, workflow_version == "28.76"),
-  beta = filter(processed_export, workflow_version == "18.45"),
-  .id = "phase"
-)
+transcription_classifications <- parse_transcription_annotations(intermediate_process, workflow_versions = transcription_workflows)
 
-class_df <- function(df = comb_df) {
-  filter(df, phase == "current") %>% 
-    filter(is_retired)
-}
+intermediate_process$records %>% 
+  filter(created_at > ymd(20170630)) %>% 
+  count(workflow_version)
+  
+  ggplot(aes(x = created_at, fill = workflow_version)) + 
+  geom_histogram()
 
-beta_df <- function(df = comb_df) {
-  filter(df, phase == "beta")
-}
-
-n_empty <- sum(comb_df$charcount == 0)
-
-comb_df <- comb_df %>% filter(charcount > 0)
 ```
 
 ## Distribution of work per transcriber
 
 ```{r top_transcribers}
-comb_df %>% 
-  count(user_name, phase) %>% 
-  ggplot(aes(x = n, fill = phase)) +
+transcription_classifications %>% 
+  count(user_name) %>% 
+  ggplot(aes(x = n)) +
   geom_histogram(binwidth = 1) +
   labs(x = "No. of transcriptions", y = "No. of individual users") +
   scale_x_sqrt() +
-  scale_y_sqrt() +
-  facet_wrap(~ phase, scales = "free_y", ncol = 1)
+  scale_y_sqrt()
 ```
 
 ## Power transcribers
 
 ```{r transcribers_by_name}
-class_df() %>% 
+transcription_classifications %>% 
   count(user_name, sort = TRUE) %>% 
   datatable()
 ```
