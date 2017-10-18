@@ -19,7 +19,7 @@ description: > # this means to ignore newlines until "baseurl:"
   Mid-point transcription results from the Getty Research Institute's
   "Mutual Muses" crowdsourced transcription project. Compiled by Matthew
   Lincoln 2017-09-08.
-baseurl: "/temp-mm-midstream" # the subpath of your site, e.g. /blog
+baseurl: "/mm-final" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: matthewdlincoln
 github_username:  mdlincoln
