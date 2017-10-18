@@ -27,6 +27,7 @@ trans_yml <- trans_yml %>%
   unname()
 
 unlink("_posts/*")
+dir.create("_posts", showWarnings = FALSE)
 
 walk(trans_yml, function(x) {
   fn <- tools::file_path_sans_ext(x$file_name)
