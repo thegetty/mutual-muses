@@ -211,8 +211,6 @@ transcription_classifications <- parse_transcription_annotations(intermediate_pr
 
 intermediate_process$records %>% 
   filter(created_at > ymd(20170630)) %>% 
-  count(workflow_version)
-  
   ggplot(aes(x = created_at, fill = workflow_version)) + 
   geom_histogram()
 
