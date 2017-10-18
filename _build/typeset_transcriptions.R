@@ -5,7 +5,7 @@ library(tidyverse)
 library(stringr)
 library(yaml)
 
-transcriptions <- readRDS("../mutual_muses_midstream//data/derived/all_with_winning.rds")
+transcriptions <- readRDS("../mutual_muses_final/data/derived/all_with_winning.rds")
 
 trans_yml <- transcriptions %>%
   mutate(clean_transcription = str_replace_all(clean_transcription, "\\n", "<br/>")) %>%
@@ -13,7 +13,7 @@ trans_yml <- transcriptions %>%
 
 google_drive_sheet <- transcriptions %>%
   select(-is_winning) %>%
-  mutate(preview = paste0("https://matthewlincoln.net/temp-mm-midstream/transcription/", tools::file_path_sans_ext(file_name)))
+  mutate(preview = paste0("https://matthewlincoln.net/mm-final/transcription/", tools::file_path_sans_ext(file_name)))
 write_csv(google_drive_sheet, "~/Desktop/gds.csv", na = "")
 
 fnames <- names(trans_yml)
@@ -30,12 +30,12 @@ unlink("_posts/*")
 
 walk(trans_yml, function(x) {
   fn <- tools::file_path_sans_ext(x$file_name)
-  path_fn <- paste("2017-09-07", fn, sep = "-")
+  path_fn <- paste("2017-10-18", fn, sep = "-")
   post_path <- paste0("_posts/", path_fn, ".md")
   post_yaml <- list(
     layout = "post",
     categories = "transcription",
-    date = "2017-09-07",
+    date = "2017-10-18",
     title = fn,
     data = x) %>%
     as.yaml() %>%
