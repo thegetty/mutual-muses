@@ -1,0 +1,43 @@
+---
+layout: default
+---
+
+{% include paginate.html %}
+
+<h1>{{ page.title }}</h1>
+
+{% assign sample_tr = page.data.classifications | first %}
+
+<ul>
+<li>Max. dissimilarity: {{ sample_tr.max_dissimilarity | round: 3 }}</li>
+<li>Mean dissimilarity: {{ sample_tr.mean_dissimilarity | round: 3 }}</li>
+</ul>
+
+<h2>Transcribers</h2>
+
+<ol>
+{% for tr in page.data.classifications %}
+  {% if tr.is_winning == "winner" %}
+  <li><strong><a href="#{{ tr.classification_id }}">WINNER - {{ tr.classification_id }} - {{ tr.user_name }}</a></strong></li>
+  {% else %}
+  <li><a href="#{{ tr.classification_id }}">{{ tr.classification_id }} - {{ tr.user_name }}</a></li>
+  {% endif %}
+{% endfor %}
+</ol>
+
+<img src="{{ site.baseurl }}/images/{{ page.title }}.jpg" />
+
+{% for tr in page.data.classifications %}
+  {% if tr.is_winning == "winner" %}
+<h2 id="{{ tr.classification_id }}"><strong>WINNER - {{ tr.classification_id }} - {{ tr.user_name }}</strong></h2>
+  {% else %}
+<h2 id="{{ tr.classification_id }}">{{ tr.classification_id }} - {{ tr.user_name }}</h2>
+  {% endif %}
+
+{{ tr.clean_transcription }}
+
+<hr style="margin-bottom:1.5em;margin-top:1.5em">
+
+{% endfor %}
+
+{% include paginate.html %}
