@@ -7,4 +7,4 @@ layout: home
 
 # [Data presentation]({{ site.baseurl }}/mutual_muses_midstream.html) (slides)
 
-[Similarity results](https://docs.google.com/spreadsheets/d/10ajx4ALJkTcFAIbyVL-NlId7LHcBS1C8-i02p92ZajM/edit?usp=sharing) (spreadhseet)
+[Similarity results](https://docs.google.com/spreadsheets/d/1XwaDpZcQrRQ295m2qLjfdC1kI1JBFxqopqy95g4Fy3Y/edit?usp=sharing) (spreadhseet)
