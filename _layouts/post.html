@@ -25,7 +25,7 @@ layout: default
 {% endfor %}
 </ol>
 
-<img src="{{ site.baseurl }}/images/{{ page.title }}.jpg" />
+<img src="{{ page.image_url }}" />
 
 {% for tr in page.data.classifications %}
   {% if tr.is_winning == "winner" %}
