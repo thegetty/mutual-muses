@@ -379,6 +379,22 @@ ratio_contained <- trans_corpus %>%
   map(pairwise_compare, f = ratio_of_matches, directional = TRUE, progress = FALSE)
 ```
 
+## Drawings
+
+```{r contested_drawings}
+document_drawings <- drawing_classifications %>% 
+  group_by(file_name) %>% 
+  summarize(
+    drawing_vote = mean(has_drawing),
+    majority_vote = drawing_vote >= 0.5)
+
+ggplot(document_drawings, aes(x = factor(round(drawing_vote, digits = 2)))) +
+  geom_bar()
+
+contested_docs <- document_drawings %>% 
+  filter(!drawing_vote %in% c(0, 1))
+```
+
 ```{r find_winning_transcriptions}
 transcription_ratios <- ratio_contained %>% 
   map_df(summarize_ratios, .id = "file_name") %>% 
@@ -395,7 +411,9 @@ winning_df <- transcription_classifications %>%
     selected_as_winning = row_number(desc(median_ratio)) == 1,
     is_winning = ifelse(selected_as_winning, "winner", "loser")) %>%
   ungroup() %>% 
-  arrange(file_name)
+  arrange(file_name) %>% 
+  left_join(document_drawings, by = "file_name")
 
 saveRDS(winning_df, "data/derived/all_with_winning.rds")
 ```
+
