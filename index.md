@@ -5,6 +5,6 @@
 layout: home
 ---
 
-[Data presentation]({{ site.baseurl }}/mutual_muses_midstream.html) (slides)
+# [Data presentation]({{ site.baseurl }}/mutual_muses_midstream.html) (slides)
 
 [Similarity results](https://docs.google.com/spreadsheets/d/10ajx4ALJkTcFAIbyVL-NlId7LHcBS1C8-i02p92ZajM/edit?usp=sharing) (spreadhseet)
