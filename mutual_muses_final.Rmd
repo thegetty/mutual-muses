@@ -442,3 +442,15 @@ winning_df <- transcription_classifications %>%
 saveRDS(winning_df, "data/derived/all_with_winning.rds")
 ```
 
+```{r missing_classifications}
+missing_transcription <- image_urls %>% 
+  anti_join(transcription_classifications, by = "file_name")
+
+missing_image_vote <- image_urls %>% 
+  anti_join(drawing_classifications, by = "file_name")
+
+missing_both <- image_urls %>% 
+  filter(file_name %in% missing_transcription$file_name & file_name %in% missing_image_vote$file_name)
+
+```
+
