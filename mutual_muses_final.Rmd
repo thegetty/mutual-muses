@@ -87,6 +87,23 @@ parse_zooniverse_metadata <- function(raw) {
     list(records = records, annotations = annotations, meta = meta, subjects = subjects)
 }
 
+# Produces a lookup table connecting subject IDs and filenames to the image
+# address on the Panoptes server
+parse_zooniverse_image_urls <- function(df) {
+  metadata <- map(df$metadata, fromJSON)
+  locations <- map(df$locations, fromJSON) %>% map_chr(1)
+  
+  filenames <- map_chr(metadata, "Filename", .default = NA_character_)
+  file_names <- map_chr(metadata, "file_name", .default = NA_character_)
+  
+  df %>% 
+    select(subject_id) %>% 
+    mutate(
+      file_name = if_else(is.na(filenames), file_names, filenames),
+      image_url = locations
+    )
+}
+
 workflow_filter <- function(zparse, workflow_versions) {
   
   indices <- which(zparse$records$workflow_version %in% workflow_versions)
@@ -192,6 +209,7 @@ summarize_ratios <- function(doc) {
 
 ```{r read_zooniverse_files}
 raw_export <- read_csv("data/mutual-muses-classifications.csv", col_types = "icicicccccccci")
+subjects_export <- read_csv("data/mutual-muses-subjects.csv", col_types = "iiiiccicc")
 
 count(raw_export, workflow_version, sort = TRUE)
 
@@ -208,6 +226,13 @@ drawing_classifications <- parse_image_annotations(intermediate_process, workflo
   filter(classification_id != 73150258)
 
 transcription_classifications <- parse_transcription_annotations(intermediate_process, workflow_versions = transcription_workflows)
+
+image_urls <- parse_zooniverse_image_urls(subjects_export) %>% 
+  group_by(file_name) %>% 
+  summarize(image_url = first(image_url))
+
+transcription_classifications <- transcription_classifications %>% 
+  left_join(image_urls, by = "file_name")
 
 intermediate_process$records %>% 
   filter(created_at > ymd(20170630)) %>% 
