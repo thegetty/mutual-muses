@@ -204,14 +204,11 @@ summarize_ratios <- function(doc) {
       min_ratio = min(value),
       total_ratio = sum(value))
 }
-
 ```
 
 ```{r read_zooniverse_files}
 raw_export <- read_csv("data/mutual-muses-classifications.csv", col_types = "icicicccccccci")
 subjects_export <- read_csv("data/mutual-muses-subjects.csv", col_types = "iiiiccicc")
-
-count(raw_export, workflow_version, sort = TRUE)
 
 # Do a preliminary parse of all data
 intermediate_process <- parse_zooniverse_metadata(raw_export)
@@ -233,12 +230,6 @@ image_urls <- parse_zooniverse_image_urls(subjects_export) %>%
 
 transcription_classifications <- transcription_classifications %>% 
   left_join(image_urls, by = "file_name")
-
-intermediate_process$records %>% 
-  filter(created_at > ymd(20170630)) %>% 
-  ggplot(aes(x = created_at, fill = workflow_version)) + 
-  geom_histogram()
-
 ```
 
 ## Distribution of work per transcriber
@@ -331,10 +322,23 @@ About `r scales::percent(ratio_with_unclear)` of transcriptions used the `[uncle
 ## Special characters
 
 ```{r non_ascii}
-ratio_special_chars <- mean(transcription_classifications$contains_special)
+ratio_special_chars <- mean(transcription_classifications$contains_special, na.rm = TRUE)
+doc_has_special <- transcription_classifications %>% 
+  group_by(file_name) %>%
+  summarize(
+    had_one_special = any(contains_special, na.rm = TRUE),
+    special_ratio = mean(contains_special, na.rm = TRUE))
+ratio_docs_special <- mean(doc_has_special$had_one_special)
+
+doc_has_special %>% 
+  filter(had_one_special) %>% 
+  ggplot(aes(x = special_ratio)) + 
+  geom_histogram()
 ```
 
-`r scales::percent(ratio_special_chars)` of transcriptions were marked as "Contains special characters"
+`r scales::percent(ratio_special_chars)` of transcriptions were marked as "Contains special characters". This covers `r scales::percent(ratio_docs_special)`, though, which means that volunteers were not at all consistent in marking which documents had special characters.
+
+## Special characters
 
 ```{r non_ascii_examples}
 diacritic_chars <- "[àèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ]"
@@ -348,7 +352,7 @@ transcription_classifications %>%
 
 ## Judging Transcription Consensus
 
-Even when excluding blank transcriptions, there a handful of transcriptions with too few characters to properly tokenize. Since these transcriptions must be discarded, we have a few documents that only have 1/2 useful transcriptions.
+Most documents have 6 useful, non-blank transcriptions, while a few have 5, but this is as low as it goes, so the data are quite satisfactory.
 
 ```{r create_corpora}
 # Produce a list of corpus objects
@@ -368,9 +372,7 @@ trans_corpus %>%
 
 ## Pairwise-similarity summaries
 
-Compared to the beta results, transcriptions here tend to have more consensus.
-
-High-disagreement docs are ones with too few transcriptions. Suggest re-loading some docs.
+The levels of transcription similarity/dissimilarity are in line with both our beta results as well as the mid-stream check-in. The vast majority of docs had largely agreeable transcriptions.
 
 ```{r all_pairwise_similarity}
 all_dissimilarity <- trans_corpus %>% 
@@ -414,11 +416,14 @@ document_drawings <- drawing_classifications %>%
     majority_vote = drawing_vote >= 0.5)
 
 ggplot(document_drawings, aes(x = factor(round(drawing_vote, digits = 2)))) +
-  geom_bar()
+  geom_bar() +
+  labs(x = "Ratio of 'yes' votes")
 
 contested_docs <- document_drawings %>% 
   filter(!drawing_vote %in% c(0, 1))
 ```
+
+Each file had 3 votes for the quesiton "is there a drawing?" The vast majority of votes were unanimous, with just `r nrow(contested_docs)` docs having conflicting answers.
 
 ```{r find_winning_transcriptions}
 transcription_ratios <- ratio_contained %>% 
@@ -431,6 +436,7 @@ transcription_ratios <- ratio_contained %>%
 winning_df <- transcription_classifications %>% 
   left_join(transcription_ratios, by = c("file_name", "classification_id")) %>% 
   left_join(all_dissimilarity, by = "file_name") %>% 
+  left_join(doc_has_special) %>% 
   group_by(file_name) %>% 
   mutate(
     selected_as_winning = row_number(desc(median_ratio)) == 1,
@@ -451,6 +457,5 @@ missing_image_vote <- image_urls %>%
 
 missing_both <- image_urls %>% 
   filter(file_name %in% missing_transcription$file_name & file_name %in% missing_image_vote$file_name)
-
 ```
 
