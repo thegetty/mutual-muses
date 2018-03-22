@@ -78,10 +78,10 @@ parse_zooniverse_metadata <- function(raw) {
       minutes_annotating = seconds_annotating / 60) %>% 
     add_count(file_name) %>% 
     rename(n_annotations = n) %>% 
-      # Parse the user agent data for each annotation
+    # Parse the user agent data for each annotation
     bind_cols(ua_parse(.$user_agent))
-    
-    list(records = records, annotations = annotations, meta = meta, subjects = subjects)
+  
+  list(records = records, annotations = annotations, meta = meta, subjects = subjects)
 }
 
 # Produces a lookup table connecting subject IDs and filenames to the image
@@ -129,7 +129,7 @@ parse_transcription_annotations <- function(zparse, workflow_versions) {
 parse_image_annotations <- function(zparse, workflow_versions) {
   
   filtered_zparse <- workflow_filter(zparse, workflow_versions)
-
+  
   filtered_zparse$records %>% 
     mutate(
       drawing_answer = map(filtered_zparse$annotations, "value") %>% map_chr(paste, collapse = ""),
@@ -142,7 +142,7 @@ parse_image_annotations <- function(zparse, workflow_versions) {
       )
     )
 }
-      
+
 dissimilar_heatmap <- function(doc) {
   simil <- doc %>% 
     pairwise_compare(jaccard_dissimilarity) %>% 
@@ -182,12 +182,12 @@ doc_ratio <- function(doc) {
 
 ratio_plot <- function(ratio_data) {
   ggplot(ratio_data, aes(x = a, y = b, fill = value)) +
-  geom_raster() +
-  scale_fill_distiller(palette = "YlGnBu", direction = 1, limits = c(0, 1)) +
-  theme(
-    axis.text.x = element_text(angle = 270, hjust = 0),
-    aspect.ratio = 1) +
-  labs(y = "Ratio of transcription...", x = "...contained by transcription:")
+    geom_raster() +
+    scale_fill_distiller(palette = "YlGnBu", direction = 1, limits = c(0, 1)) +
+    theme(
+      axis.text.x = element_text(angle = 270, hjust = 0),
+      aspect.ratio = 1) +
+    labs(y = "Ratio of transcription...", x = "...contained by transcription:")
 }
 
 summarize_ratios <- function(doc) {
@@ -313,9 +313,9 @@ ggplot(transcription_classifications, aes(x = unclear_count)) +
   geom_histogram() +
   labs(x = "Times '[unclear]' used", y = "No. of transcriptions")
 ```
- 
+
 About `r scales::percent(ratio_with_unclear)` of transcriptions used the `[unclear]` tag at least once.
- 
+
 ## Special characters
 
 ```{r non_ascii}
