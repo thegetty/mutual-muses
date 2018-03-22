@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+*.html
+*_cache/
+*_files/
+*.rds
+*.csv

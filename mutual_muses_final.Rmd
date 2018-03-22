@@ -1,0 +1,459 @@
+---
+title: "Mutual Muses Final Report"
+author: "Matthew Lincoln"
+date: "November 1, 2017"
+output: 
+  ioslides_presentation:
+    smaller: true
+    transition: faster
+    fig_height: 4.5
+    standalone: true
+---
+
+```{r libraries setup, include=FALSE}
+library(tidyverse)
+library(tidytext)
+library(textreuse)
+library(jsonlite)
+library(lubridate)
+library(knitr)
+library(uaparserjs)
+library(DT)
+library(ggrepel)
+library(bootr)
+library(rematch2)
+
+opts_chunk$set(cache = TRUE, echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r processing_functions}
+# Need to try two different field names to collect every single file name
+pull_filename <- function(x, .default = NA_character_) {
+  if (!is.null(x[["Filename"]])) {
+    x[["Filename"]]
+  } else if (!is.null(x[["file_name"]])) {
+    x[["file_name"]]
+  } else {
+    .default
+  }
+}
+
+# General function applicable to all workflows. Takes raw Zooniverse csv and
+# returns additional parses along with the metadata, annotations, and subjects
+# data as R lists.
+parse_zooniverse_metadata <- function(raw) {
+  
+  message("Reading metadata...")
+  meta <- map(raw$metadata, fromJSON)
+  message("Reading annotations...")
+  annotations <- map(raw$annotations, fromJSON)
+  message("Reading subjects...")
+  subjects <- map(raw$subject_data, fromJSON)
+  
+  message("Computing useful variables...")
+  records <- raw %>% 
+    # Get necessary user agent 
+    select(
+      classification_id,
+      workflow_version,
+      subject_ids,
+      user_name,
+      created_at) %>% 
+    # Get relevant classification metadata
+    mutate(
+      started_on = map_chr(meta, "started_at", .default = NA_character_),
+      ended_on = map_chr(meta, "finished_at", .default = NA_character_),
+      user_agent = map_chr(meta, "user_agent", .default = NA_character_),
+      file_name = map(subjects, 1) %>% map_chr(pull_filename, .default = NA_character_),
+      subject_loaded_date = map_chr(subjects, list(1, "retired", "created_at"), .default = NA_character_),
+      subject_retired_date = map_chr(subjects, list(1, "retired", "retired_at"), .default = NA_character_)) %>% 
+    # Coerce variables to useful types
+    mutate_at(vars(created_at, started_on, ended_on, subject_loaded_date, subject_retired_date), funs(ymd_hms)) %>% 
+    # Generate further useful metrics based on thse metadata
+    mutate(
+      is_retired = !is.na(subject_retired_date),
+      day_of = floor_date(created_at, unit = "day"),
+      is_weekend = wday(created_at) %in% c(1, 2),
+      seconds_annotating = as.numeric(ended_on - started_on),
+      minutes_annotating = seconds_annotating / 60) %>% 
+    add_count(file_name) %>% 
+    rename(n_annotations = n) %>% 
+      # Parse the user agent data for each annotation
+    bind_cols(ua_parse(.$user_agent))
+    
+    list(records = records, annotations = annotations, meta = meta, subjects = subjects)
+}
+
+# Produces a lookup table connecting subject IDs and filenames to the image
+# address on the Panoptes server
+parse_zooniverse_image_urls <- function(df) {
+  metadata <- map(df$metadata, fromJSON)
+  locations <- map(df$locations, fromJSON) %>% map_chr(1)
+  
+  filenames <- map_chr(metadata, "Filename", .default = NA_character_)
+  file_names <- map_chr(metadata, "file_name", .default = NA_character_)
+  
+  df %>% 
+    select(subject_id) %>% 
+    mutate(
+      file_name = if_else(is.na(filenames), file_names, filenames),
+      image_url = locations
+    )
+}
+
+workflow_filter <- function(zparse, workflow_versions) {
+  
+  indices <- which(zparse$records$workflow_version %in% workflow_versions)
+  records <- slice(zparse$records, indices)
+  annotations <- zparse$annotations[indices]
+  meta <- zparse$meta[indices]
+  subjects <- zparse$subjects[indices]
+  
+  list(records = records, annotations = annotations, meta = meta, subjects = subjects)
+}
+
+parse_transcription_annotations <- function(zparse, workflow_versions) {
+  
+  filtered_zparse <- workflow_filter(zparse, workflow_versions)
+  
+  filtered_zparse$records %>% 
+    mutate(
+      annotation_text = map_chr(filtered_zparse$annotations, list("value", 1), .default = NA_character_),
+      contains_special = map_chr(filtered_zparse$annotations, list("value", 2, 1), .default = NA_character_) == "Yes",
+      unclear_count = str_count(annotation_text, "\\[unclear\\]"),
+      clean_transcription = str_replace_all(annotation_text, "\\[/?unclear\\]", "") %>% iconv(to = "ASCII//TRANSLIT"),
+      charcount = nchar(clean_transcription)
+    )
+}
+
+parse_image_annotations <- function(zparse, workflow_versions) {
+  
+  filtered_zparse <- workflow_filter(zparse, workflow_versions)
+
+  filtered_zparse$records %>% 
+    mutate(
+      drawing_answer = map(filtered_zparse$annotations, "value") %>% map_chr(paste, collapse = ""),
+      has_drawing = case_when(
+        drawing_answer == "No, there isn't." ~ FALSE,
+        drawing_answer == "Yes, there is!" ~ TRUE,
+        drawing_answer == "No." ~ FALSE,
+        drawing_answer == "Yes." ~ TRUE,
+        TRUE ~ FALSE
+      )
+    )
+}
+      
+dissimilar_heatmap <- function(doc) {
+  simil <- doc %>% 
+    pairwise_compare(jaccard_dissimilarity) %>% 
+    as.data.frame() 
+  
+  factored_simil <- simil %>% 
+    rownames_to_column("source") %>% 
+    gather(target, value = dissimilarity, -source) %>% 
+    mutate_at(vars(target, source), funs(factor(., levels = rownames(simil)))) %>% 
+    filter(!is.na(dissimilarity))
+  
+  ggplot(factored_simil, aes(x = source, y = target, fill = dissimilarity)) +
+    scale_fill_distiller(palette = "YlOrRd", direction = 1, limits = c(0, 1)) +
+    geom_raster() +
+    labs(x = NULL, y = NULL) +
+    theme(
+      # Rotate the x-axis lables so they are legible
+      axis.text.x = element_text(angle = 270, hjust = 0),
+      aspect.ratio = 1)
+}
+
+side_by_side <- function(subj, left, right) {
+  datatable(data.frame(
+    a = as.character(content(subj[[left]])),
+    b = as.character(content(subj[[right]]))) %>% 
+      set_names(c(left, right)), escape = TRUE)
+}
+
+# Ratio of items in b that are in a
+doc_ratio <- function(doc) {
+  doc %>% 
+    as.data.frame() %>% 
+    rownames_to_column("a") %>% 
+    gather(b, value, -a) %>% 
+    filter(!is.na(value))
+}
+
+ratio_plot <- function(ratio_data) {
+  ggplot(ratio_data, aes(x = a, y = b, fill = value)) +
+  geom_raster() +
+  scale_fill_distiller(palette = "YlGnBu", direction = 1, limits = c(0, 1)) +
+  theme(
+    axis.text.x = element_text(angle = 270, hjust = 0),
+    aspect.ratio = 1) +
+  labs(y = "Ratio of transcription...", x = "...contained by transcription:")
+}
+
+summarize_ratios <- function(doc) {
+  doc %>% 
+    doc_ratio() %>% 
+    group_by(a) %>% 
+    summarize(
+      mean_ratio = mean(value),
+      median_ratio = median(value),
+      max_ratio = max(value),
+      min_ratio = min(value),
+      total_ratio = sum(value))
+}
+```
+
+```{r read_zooniverse_files}
+raw_export <- read_csv("data/mutual-muses-classifications.csv", col_types = "icicicccccccci")
+subjects_export <- read_csv("data/mutual-muses-subjects.csv", col_types = "iiiiccicc")
+
+# Do a preliminary parse of all data
+intermediate_process <- parse_zooniverse_metadata(raw_export)
+
+image_workflows <- c("5.17")
+
+transcription_workflows <- c("28.76", "29.76")
+
+drawing_classifications <- parse_image_annotations(intermediate_process, workflow_versions = image_workflows) %>% 
+  # Get rid of one weird classification that contained transcription answers
+  # despite having the workflow of a drawing classification
+  filter(classification_id != 73150258)
+
+transcription_classifications <- parse_transcription_annotations(intermediate_process, workflow_versions = transcription_workflows)
+
+image_urls <- parse_zooniverse_image_urls(subjects_export) %>% 
+  group_by(file_name) %>% 
+  summarize(image_url = first(image_url))
+
+transcription_classifications <- transcription_classifications %>% 
+  left_join(image_urls, by = "file_name")
+```
+
+## Distribution of work per transcriber
+
+```{r top_transcribers}
+transcription_classifications %>% 
+  count(user_name) %>% 
+  ggplot(aes(x = n)) +
+  geom_histogram(binwidth = 1) +
+  labs(x = "No. of transcriptions", y = "No. of individual users") +
+  scale_x_sqrt() +
+  scale_y_sqrt()
+```
+
+## Power transcribers
+
+```{r transcribers_by_name}
+transcription_classifications %>% 
+  count(user_name, sort = TRUE) %>% 
+  datatable()
+```
+
+
+## How did engagement change over time?
+
+Weekends are higlighted in blue.
+
+```{r transcription_times}
+release_annotations <- data_frame(
+  year = c("1948", "1949", "1950", "1951", "1952", "Getty Hub 1", "Getty Hub 2", "Getty Hub 3", "Newsletter"),
+  release_date = ymd_hms(20170801000000, 20170802000000, 20170804000000, 20170814000000, 20170829000000, 20170802000000, 20170804000000, 20170816000000, 20170831000000)
+)
+
+class_per_day <- transcription_classifications %>% 
+  filter(day_of > ymd(20170725)) %>% 
+  add_column(counter = 1) %>% 
+  bootr(group_vars = c("day_of", "is_weekend"), source_var = "counter", boot_fun = sum)
+
+class_per_day %>% 
+  ggplot(aes(x = day_of, y = boot_med)) +
+  geom_errorbar(aes(ymin = boot_low, ymax = boot_high), alpha = 0.5) +
+  geom_point(aes(color = is_weekend), size = 1) +
+  theme(legend.position = "none") +
+  labs(x = NULL, y = "No. of transcriptions") +
+  geom_vline(data = release_annotations, aes(xintercept = release_date), alpha = 0.5) +
+  geom_label_repel(data = release_annotations, aes(x = release_date, y = 750, label = year), min.segment.length = unit(0, "lines"))
+```
+
+## Transcription lengths
+
+```{r}
+trans_medians <- transcription_classifications %>% 
+  summarize(median_length = median(charcount, na.rm = TRUE))
+
+transcription_classifications %>% 
+  ggplot() +
+  geom_histogram(aes(x = charcount)) +
+  geom_vline(data = trans_medians, aes(xintercept = median_length)) +
+  labs(x = "No. of characters in the transcription", y = "No. of transcriptions")
+```
+
+
+## Transcription time
+
+```{r time_spent_transcribing}
+med_times <- transcription_classifications %>% 
+  summarize(med_min = median(minutes_annotating, na.rm = TRUE))
+
+ggplot(transcription_classifications, aes(x = minutes_annotating)) +
+  geom_histogram() +
+  geom_vline(data = med_times, aes(xintercept = med_min)) +
+  xlim(0, 30) +
+  labs(x = "Minutes transcribing", y = "No. of transcriptions")
+
+```
+
+
+## Use of `[unclear]` tags.
+
+```{r unclear_counts}
+ratio_with_unclear <- mean(transcription_classifications$unclear_count > 0)
+
+ggplot(transcription_classifications, aes(x = unclear_count)) +
+  geom_histogram() +
+  labs(x = "Times '[unclear]' used", y = "No. of transcriptions")
+```
+ 
+About `r scales::percent(ratio_with_unclear)` of transcriptions used the `[unclear]` tag at least once.
+ 
+## Special characters
+
+```{r non_ascii}
+ratio_special_chars <- mean(transcription_classifications$contains_special, na.rm = TRUE)
+doc_has_special <- transcription_classifications %>% 
+  group_by(file_name) %>%
+  summarize(
+    had_one_special = any(contains_special, na.rm = TRUE),
+    special_ratio = mean(contains_special, na.rm = TRUE))
+ratio_docs_special <- mean(doc_has_special$had_one_special)
+
+doc_has_special %>% 
+  filter(had_one_special) %>% 
+  ggplot(aes(x = special_ratio)) + 
+  geom_histogram()
+```
+
+`r scales::percent(ratio_special_chars)` of transcriptions were marked as "Contains special characters". This covers `r scales::percent(ratio_docs_special)`, though, which means that volunteers were not at all consistent in marking which documents had special characters.
+
+## Special characters
+
+```{r non_ascii_examples}
+diacritic_chars <- "[àèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ]"
+
+transcription_classifications %>% 
+  bind_re_match(annotation_text, paste0("(?<spec_char_context>.{0,20}", diacritic_chars, "+.{0,20})")) %>% 
+  select(spec_char_context) %>% 
+  na.omit() %>% 
+  datatable()
+```
+
+## Judging Transcription Consensus
+
+Most documents have 6 useful, non-blank transcriptions, while a few have 5, but this is as low as it goes, so the data are quite satisfactory.
+
+```{r create_corpora}
+# Produce a list of corpus objects
+trans_corpus <- transcription_classifications %>% 
+  group_by(file_name) %>% 
+  split(.$file_name) %>% 
+  map(function(x) {
+    TextReuseCorpus(text = set_names(x$clean_transcription, x$classification_id), tokenizer = tokenizers::tokenize_character_shingles, simplify = TRUE, n = 4, keep_tokens = TRUE, keep_text = TRUE, progress = FALSE, skip_short = FALSE)
+  })
+
+trans_corpus %>% 
+  map_int(length) %>% 
+  as.factor() %>% 
+  fct_count() %>% 
+  rename(elligible_transcriptions = f)
+```
+
+## Pairwise-similarity summaries
+
+The levels of transcription similarity/dissimilarity are in line with both our beta results as well as the mid-stream check-in. The vast majority of docs had largely agreeable transcriptions.
+
+```{r all_pairwise_similarity}
+all_dissimilarity <- trans_corpus %>% 
+  map(pairwise_compare, f = jaccard_dissimilarity, progress = FALSE) %>% 
+  map_df(function(x) {
+    data_frame(
+      mean_dissimilarity = mean(x, na.rm = TRUE),
+      median_dissimilarity = median(x, na.rm = TRUE),
+      max_dissimilarity = max(x, na.rm = TRUE),
+      min_dissimilarity = min(x, na.rm = TRUE))
+  }, .id = "file_name")
+```
+
+```{r overall_dissimilarity}
+all_dissimilarity %>% 
+  gather(metric, value, -file_name) %>% 
+  ggplot(aes(x = metric, y = value, fill = metric)) +
+  geom_boxplot() +
+  ylim(0, 1) +
+  theme(legend.position = "none")
+
+low_example <- "gri_2003_m_46_b02_f01_002.jpg"
+low_dissimilarity_doc <- trans_corpus[[low_example]]
+high_example <- "gri_2003_m_46_b01_f01_002.jpg"
+high_dissimilarity_doc <- trans_corpus[["gri_2003_m_46_b01_f01_002.jpg"]]
+```
+
+
+```{r pairwise_ratios}
+ratio_contained <- trans_corpus %>% 
+  map(pairwise_compare, f = ratio_of_matches, directional = TRUE, progress = FALSE)
+```
+
+## Drawings
+
+```{r contested_drawings}
+document_drawings <- drawing_classifications %>% 
+  group_by(file_name) %>% 
+  summarize(
+    drawing_vote = mean(has_drawing),
+    majority_vote = drawing_vote >= 0.5)
+
+ggplot(document_drawings, aes(x = factor(round(drawing_vote, digits = 2)))) +
+  geom_bar() +
+  labs(x = "Ratio of 'yes' votes")
+
+contested_docs <- document_drawings %>% 
+  filter(!drawing_vote %in% c(0, 1))
+```
+
+Each file had 3 votes for the quesiton "is there a drawing?" The vast majority of votes were unanimous, with just `r nrow(contested_docs)` docs having conflicting answers.
+
+```{r find_winning_transcriptions}
+transcription_ratios <- ratio_contained %>% 
+  map_df(summarize_ratios, .id = "file_name") %>% 
+  mutate(
+    file_name = as.character(file_name),
+    classification_id = as.integer(a)) %>% 
+  select(-a)
+
+winning_df <- transcription_classifications %>% 
+  left_join(transcription_ratios, by = c("file_name", "classification_id")) %>% 
+  left_join(all_dissimilarity, by = "file_name") %>% 
+  left_join(doc_has_special) %>% 
+  group_by(file_name) %>% 
+  mutate(
+    selected_as_winning = row_number(desc(median_ratio)) == 1,
+    is_winning = ifelse(selected_as_winning, "winner", "loser")) %>%
+  ungroup() %>% 
+  arrange(file_name) %>% 
+  left_join(document_drawings, by = "file_name")
+
+saveRDS(winning_df, "data/derived/all_with_winning.rds")
+write_csv(winning_df, path = "data/derived/all_with_winning.csv", na = "")
+```
+
+```{r missing_classifications}
+missing_transcription <- image_urls %>% 
+  anti_join(transcription_classifications, by = "file_name")
+
+missing_image_vote <- image_urls %>% 
+  anti_join(drawing_classifications, by = "file_name")
+
+missing_both <- image_urls %>% 
+  filter(file_name %in% missing_transcription$file_name & file_name %in% missing_image_vote$file_name)
+```
+
