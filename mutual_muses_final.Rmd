@@ -12,7 +12,6 @@ output:
 
 ```{r libraries setup, include=FALSE}
 library(tidyverse)
-library(stringr)
 library(tidytext)
 library(textreuse)
 library(jsonlite)
@@ -20,8 +19,6 @@ library(lubridate)
 library(knitr)
 library(uaparserjs)
 library(DT)
-library(forcats)
-library(ggplot2)
 library(ggrepel)
 library(bootr)
 library(rematch2)
