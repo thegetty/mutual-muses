@@ -11,11 +11,6 @@ trans_yml <- transcriptions %>%
   mutate(clean_transcription = str_replace_all(clean_transcription, "\\n", "<br/>")) %>%
   split(.$file_name)
 
-google_drive_sheet <- transcriptions %>%
-  select(-is_winning) %>%
-  mutate(preview = paste0("https://matthewlincoln.net/mm-final/transcription/", tools::file_path_sans_ext(file_name)))
-write_csv(google_drive_sheet, "~/Desktop/gds.csv", na = "")
-
 fnames <- names(trans_yml)
 
 trans_yml <- trans_yml %>%
