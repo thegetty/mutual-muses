@@ -5,3 +5,7 @@
 *_files/
 *.rds
 *.csv
+.RData
+.Ruserdata
+_site
+.jekyll-metadata

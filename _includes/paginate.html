@@ -1,0 +1,11 @@
+{% if page.previous.url != nil %}
+<p><a href="{{ site.baseurl }}{{ page.previous.url }}">Previous document</a><p>
+{% else %}
+<p>Previous document</p>
+{% endif %}
+
+{% if page.next.url != nil %}
+<p><a href="{{ site.baseurl }}{{ page.next.url }}">Next document</a></p>
+{% else %}
+<p>Next document</p>
+{% endif %}
