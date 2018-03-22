@@ -27,6 +27,8 @@ opts_chunk$set(cache = TRUE, echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
 ```{r processing_functions}
+# Data export reshaping functions ----
+
 # Need to try two different field names to collect every single file name
 pull_filename <- function(x, .default = NA_character_) {
   if (!is.null(x[["Filename"]])) {
@@ -101,6 +103,7 @@ parse_zooniverse_image_urls <- function(df) {
     )
 }
 
+# Function to filter annotation data so it's only coming from selected workflows
 workflow_filter <- function(zparse, workflow_versions) {
   
   indices <- which(zparse$records$workflow_version %in% workflow_versions)
@@ -112,6 +115,7 @@ workflow_filter <- function(zparse, workflow_versions) {
   list(records = records, annotations = annotations, meta = meta, subjects = subjects)
 }
 
+# Generate a few basic metrics on the text of annotations themsleves
 parse_transcription_annotations <- function(zparse, workflow_versions) {
   
   filtered_zparse <- workflow_filter(zparse, workflow_versions)
@@ -126,6 +130,7 @@ parse_transcription_annotations <- function(zparse, workflow_versions) {
     )
 }
 
+# Standardize image annotation task answers into a boolean value
 parse_image_annotations <- function(zparse, workflow_versions) {
   
   filtered_zparse <- workflow_filter(zparse, workflow_versions)
@@ -143,6 +148,9 @@ parse_image_annotations <- function(zparse, workflow_versions) {
     )
 }
 
+# Analysis and visualization functions for text corpora ----
+
+# Visualize annotation dissimilarities for a given document corpus as a heatmap
 dissimilar_heatmap <- function(doc) {
   simil <- doc %>% 
     pairwise_compare(jaccard_dissimilarity) %>% 
@@ -164,6 +172,7 @@ dissimilar_heatmap <- function(doc) {
       aspect.ratio = 1)
 }
 
+# Create a datatable to compare two different transcriptions for a document
 side_by_side <- function(subj, left, right) {
   datatable(data.frame(
     a = as.character(content(subj[[left]])),
@@ -171,7 +180,7 @@ side_by_side <- function(subj, left, right) {
       set_names(c(left, right)), escape = TRUE)
 }
 
-# Ratio of items in b that are in a
+# For a given set of document statistics, create a tidy dataframe
 doc_ratio <- function(doc) {
   doc %>% 
     as.data.frame() %>% 
@@ -190,6 +199,8 @@ ratio_plot <- function(ratio_data) {
     labs(y = "Ratio of transcription...", x = "...contained by transcription:")
 }
 
+# For each transcription, summarize the ratios it contains of all other
+# transcriptions
 summarize_ratios <- function(doc) {
   doc %>% 
     doc_ratio() %>% 
@@ -352,7 +363,9 @@ transcription_classifications %>%
 Most documents have 6 useful, non-blank transcriptions, while a few have 5, but this is as low as it goes, so the data are quite satisfactory.
 
 ```{r create_corpora}
-# Produce a list of corpus objects
+# Produce a list of corpus objects using the TextReuse package. The collections
+# of annotations for a subject is treated as a corpus. Each annotation is
+# tokenized using character shingles.
 trans_corpus <- transcription_classifications %>% 
   group_by(file_name) %>% 
   split(.$file_name) %>% 
@@ -360,6 +373,8 @@ trans_corpus <- transcription_classifications %>%
     TextReuseCorpus(text = set_names(x$clean_transcription, x$classification_id), tokenizer = tokenizers::tokenize_character_shingles, simplify = TRUE, n = 4, keep_tokens = TRUE, keep_text = TRUE, progress = FALSE, skip_short = FALSE)
   })
 
+# We can then iterate over the trans_corpus object. Here, we check the counts of
+# transcriptions for each document
 trans_corpus %>% 
   map_int(length) %>% 
   as.factor() %>% 
@@ -372,6 +387,8 @@ trans_corpus %>%
 The levels of transcription similarity/dissimilarity are in line with both our beta results as well as the mid-stream check-in. The vast majority of docs had largely agreeable transcriptions.
 
 ```{r all_pairwise_similarity}
+# For each document, compare the jaccard dissimiliarity of its transcriptions
+# pairwise
 all_dissimilarity <- trans_corpus %>% 
   map(pairwise_compare, f = jaccard_dissimilarity, progress = FALSE) %>% 
   map_df(function(x) {
@@ -399,6 +416,8 @@ high_dissimilarity_doc <- trans_corpus[["gri_2003_m_46_b01_f01_002.jpg"]]
 
 
 ```{r pairwise_ratios}
+# For each document, compare the ratio of token matches between its
+# transcriptions pairwise
 ratio_contained <- trans_corpus %>% 
   map(pairwise_compare, f = ratio_of_matches, directional = TRUE, progress = FALSE)
 ```
@@ -423,6 +442,8 @@ contested_docs <- document_drawings %>%
 Each file had 3 votes for the quesiton "is there a drawing?" The vast majority of votes were unanimous, with just `r nrow(contested_docs)` docs having conflicting answers.
 
 ```{r find_winning_transcriptions}
+# For each document, find the transcription with the highest median ratio
+# contained. This is selected as the "winner"
 transcription_ratios <- ratio_contained %>% 
   map_df(summarize_ratios, .id = "file_name") %>% 
   mutate(
@@ -447,6 +468,7 @@ write_csv(winning_df, path = "data/derived/all_with_winning.csv", na = "")
 ```
 
 ```{r missing_classifications}
+# Checks because of a metadata mixup we had midway through the project
 missing_transcription <- image_urls %>% 
   anti_join(transcription_classifications, by = "file_name")
 
