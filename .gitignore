@@ -3,3 +3,5 @@
 *.html
 *_cache/
 *_files/
+*.rds
+*.csv
