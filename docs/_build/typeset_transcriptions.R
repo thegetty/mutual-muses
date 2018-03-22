@@ -5,7 +5,7 @@ library(tidyverse)
 library(stringr)
 library(yaml)
 
-transcriptions <- readRDS("../mutual_muses_final/data/derived/all_with_winning.rds")
+transcriptions <- readRDS("../analysis/data/derived/all_with_winning.rds")
 
 trans_yml <- transcriptions %>%
   mutate(clean_transcription = str_replace_all(clean_transcription, "\\n", "<br/>")) %>%
