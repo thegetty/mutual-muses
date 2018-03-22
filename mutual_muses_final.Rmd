@@ -443,6 +443,7 @@ winning_df <- transcription_classifications %>%
   left_join(document_drawings, by = "file_name")
 
 saveRDS(winning_df, "data/derived/all_with_winning.rds")
+write_csv(winning_df, path = "data/derived/all_with_winning.csv", na = "")
 ```
 
 ```{r missing_classifications}
