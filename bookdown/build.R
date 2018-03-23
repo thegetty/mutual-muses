@@ -20,7 +20,7 @@ image_path <- transcriptions$file_name[1]
 
 
 produce_spread <- function(filename, text, image_path) {
-  header <- str_glue("# {filename}")
+  header <- str_glue("## {filename}")
   body <- text
 
   image_body <- str_glue("include_graphics('images/{image_path}')")
@@ -32,12 +32,10 @@ produce_spread <- function(filename, text, image_path) {
 
 {body}
 
-
-
-```{{r}}
+```{{r, out.width = '100%', fig.fullwidth = TRUE}}
 {image_body}
 ```
-
+\\clearpage
 
 ")
 }
@@ -52,14 +50,7 @@ spreads[1]
 spread_paths <- path("scratch", path_ext_set(transcriptions$file_name, "Rmd"))
 
 doc_metadata <- list(
-  title = "Mutual Muses",
-  output = list(
-    "bookdown::tufte_book2" = list(
-      toc = FALSE,
-      split_by = "none",
-      number_sections = FALSE
-    )
-  )
+  title = "Mutual Muses"
 )
 
 header <- str_glue("
@@ -84,5 +75,5 @@ write_lines(header, path = rmd_path)
 
 walk(spreads, ~ write_lines(., path = rmd_path, append = TRUE))
 
-render_book("mutual_muses.Rmd", output_format = tufte_book2())
+render_book("mutual_muses.Rmd", output_format = "bookdown::tufte_book2")
 
