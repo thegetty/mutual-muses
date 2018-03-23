@@ -8,11 +8,16 @@ library(fs)
 
 available_images <- dir_ls("images", glob = "*.jpg") %>% path_file()
 
+replacements <- c(
+  " +" = " ",
+  "\\t" = " ",
+  "\\\\" = " "
+)
+
 transcriptions <- read_csv("mm-post-process.csv") %>%
   filter(file_name %in% available_images) %>%
-  mutate(annotation_text = str_trim(str_replace_all(annotation_text, c(" +" = " ", "\\t" = " ")))) %>%
-  arrange(file_name) %>%
-  slice(1:20)
+  mutate(annotation_text = str_trim(str_replace_all(annotation_text, pattern = replacements))) %>%
+  arrange(file_name)
 
 filename <- transcriptions$file_name[1]
 text <- transcriptions$annotation_text[1]
@@ -23,9 +28,9 @@ parse_path <- function(p) {
     year = str_match(p, "gri_(\\d{4})")[,2],
     letter = toupper(str_match(p, "gri_\\d{4}_([a-z]+)")[,2]),
     series = str_match(p, "gri_\\d{4}_[a-z]+_(\\d+)")[,2],
-    box = str_match(p, "b(\\d+)")[,2],
-    folder = str_match(p, "f(\\d+)")[,2],
-    sheet = str_match(p, "f\\d+_(\\d+)")[,2]
+    box = as.integer(str_match(p, "b(\\d+)")[,2]),
+    folder = as.integer(str_match(p, "f(\\d+)")[,2]),
+    sheet = as.integer(str_match(p, "f\\d+_(\\d+)")[,2])
   )
 }
 
