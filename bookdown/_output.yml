@@ -2,4 +2,4 @@ bookdown::tufte_book2:
   toc: no
   number_sections: no
   includes:
-    in_header: preamble.tex
+    before_body: preamble.tex

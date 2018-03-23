@@ -30,7 +30,7 @@ parse_path <- function(p) {
 }
 
 produce_spread <- function(filename, text, image_path) {
-  header <- str_glue("## {filename}")
+  header <- str_glue("# {filename}")
   body <- text
 
   parsed_path <- parse_path(filename)
@@ -49,7 +49,7 @@ produce_spread <- function(filename, text, image_path) {
 ```{{r, out.width = '100%', fig.fullwidth = TRUE, fig.cap = '{caption}'}}
 {image_body}
 ```
-\\clearpage
+
 
 ")
 }
