@@ -12,16 +12,30 @@ transcriptions <- read_csv("mm-post-process.csv") %>%
   filter(file_name %in% available_images) %>%
   mutate(annotation_text = str_trim(str_replace_all(annotation_text, c(" +" = " ", "\\t" = " ")))) %>%
   arrange(file_name) %>%
-  slice(1:100)
+  slice(1:20)
 
 filename <- transcriptions$file_name[1]
 text <- transcriptions$annotation_text[1]
 image_path <- transcriptions$file_name[1]
 
+parse_path <- function(p) {
+  list(
+    year = str_match(p, "gri_(\\d{4})")[,2],
+    letter = toupper(str_match(p, "gri_\\d{4}_([a-z]+)")[,2]),
+    series = str_match(p, "gri_\\d{4}_[a-z]+_(\\d+)")[,2],
+    box = str_match(p, "b(\\d+)")[,2],
+    folder = str_match(p, "f(\\d+)")[,2],
+    sheet = str_match(p, "f\\d+_(\\d+)")[,2]
+  )
+}
 
 produce_spread <- function(filename, text, image_path) {
   header <- str_glue("## {filename}")
   body <- text
+
+  parsed_path <- parse_path(filename)
+
+  caption <- str_glue("Series {parsed_path$year}.{parsed_path$letter}.{parsed_path$series}, box {parsed_path$box}, folder {parsed_path$folder}, sheet {parsed_path$sheet}")
 
   image_body <- str_glue("include_graphics('images/{image_path}')")
 
@@ -32,7 +46,7 @@ produce_spread <- function(filename, text, image_path) {
 
 {body}
 
-```{{r, out.width = '100%', fig.fullwidth = TRUE}}
+```{{r, out.width = '100%', fig.fullwidth = TRUE, fig.cap = '{caption}'}}
 {image_body}
 ```
 \\clearpage
