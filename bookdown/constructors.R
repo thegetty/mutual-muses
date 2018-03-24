@@ -8,19 +8,25 @@ library(tufte)
 library(xtable)
 library(lubridate)
 
-doc_metadata <- list(
-  title = "Mutual Muses",
-  subtitle = "The Correspondence of Lawrence Alloway and Sylvia Sleigh",
-  author = list(
-    "The Zooniverse Mutual Muses Community"
-  ),
-  date = as.character(Sys.Date())
-)
+doc_metadata <- function(partname) {
+  list(
+    title = str_glue("Mutual Muses {partname}"),
+    subtitle = "The Correspondence of Lawrence Alloway and Sylvia Sleigh",
+    author = list(
+      "The Zooniverse Mutual Muses Community"
+    ),
+    date = as.character(Sys.Date())
+  )
+}
 
-header <- str_glue(
-"
+header <- function(partname = "") {
+
+  specific_doc_meta <- doc_metadata(partname)
+
+  str_glue(
+    "
 ---
-{as.yaml(doc_metadata)}---
+{as.yaml(specific_doc_meta)}---
 
 ```{{r, include = FALSE}}
 knitr::opts_chunk$set(
@@ -33,6 +39,7 @@ error = FALSE
 )
 ```
 ")
+}
 
 replacements <- c(
   " +" = " ",

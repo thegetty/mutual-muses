@@ -36,11 +36,12 @@ split_transcriptions <- transcriptions %>%
   map(~ split(., .$month))
 
 spreads <- imap(split_transcriptions, ~ produce_part(.x, .y))
+
 flat_spreads <- spreads %>% flatten() %>% flatten() %>% flatten_chr()
 
 rmd_path <- "mutual_muses.Rmd"
 
-write_lines(header, path = rmd_path)
+write_lines(header(), path = rmd_path)
 
 walk(flat_spreads, ~ write_lines(., path = rmd_path, append = TRUE))
 
