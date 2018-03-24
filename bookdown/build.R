@@ -40,7 +40,7 @@ replacements <- c(
 
 choice_final_data <- mm_final %>%
   filter(selected_as_winning) %>%
-  select(subject_ids, classification_id, user_name, day_of)
+  select(subject_ids, classification_id, user_name, day_of, has_drawing = majority_vote)
 
 transcriptions <- read_csv("mm-post-process.csv") %>%
   inner_join(available_image_paths, by = "file_name") %>%
@@ -52,7 +52,7 @@ transcriptions <- read_csv("mm-post-process.csv") %>%
   mutate(
     user_name = if_else(str_detect(user_name, "not-logged-in"), "an anonymous Zooniverse user", user_name),
     day_of = format(day_of)) %>%
-  slice(1:50) %>%
+  slice(1:100) %>%
   mutate_at(vars(annotation_text, user_name), sanitize)
 
 
@@ -85,7 +85,8 @@ produce_chapter <- function(df, chapname) {
                         text = df$annotation_text,
                         image_path = df$full_path,
                         user = df$user_name,
-                        completed = df$day_of)
+                        completed = df$day_of,
+                        has_drawing = df$has_drawing)
     c(
       str_glue("# {chapname}"),
       pmap(named_input, produce_spread)
@@ -93,10 +94,12 @@ produce_chapter <- function(df, chapname) {
   }
 }
 
-produce_spread <- function(filename, text, image_path, user, completed) {
+produce_spread <- function(filename, text, image_path, user, completed, has_drawing) {
   titletext <- create_title(text)
   header <- str_glue("## {titletext}")
   body <- text
+
+  ufn <- str_replace_all(path_ext_remove(filename), "_", "-")
 
   parsed_path <- parse_path(filename)
 
@@ -107,6 +110,8 @@ produce_spread <- function(filename, text, image_path, user, completed) {
 
   image_body <- str_glue("include_graphics('{image_path}')")
 
+  drawing_note <- if_else(has_drawing, "\\index{doodle}", "")
+
   str_glue(
 "
 
@@ -116,10 +121,13 @@ produce_spread <- function(filename, text, image_path, user, completed) {
 
 {body}
 
-```{{r, out.width = '100%', fig.fullwidth = TRUE, fig.cap = '{caption}'}}
+{drawing_note}
+
+(ref:{ufn}) {caption}
+
+```{{r {ufn}, out.width = '100%', fig.fullwidth = TRUE, fig.cap = '(ref:{ufn})'}}
 {image_body}
 ```
-
 
 ")
 }
@@ -132,7 +140,12 @@ flat_spreads[1:3]
 
 
 doc_metadata <- list(
-  title = "Mutual Muses"
+  title = "Mutual Muses",
+  subtitle = "The Correspondence of Lawrence Alloway and Sylvia Sleigh",
+  author = list(
+    "The Zooniverse Mutual Muses Community"
+  ),
+  date = as.character(Sys.Date())
 )
 
 header <- str_glue("
