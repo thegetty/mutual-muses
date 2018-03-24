@@ -21,7 +21,7 @@ available_image_paths <- data_frame(full_path = dir_ls(image_directory, glob = "
     month = factor(month_number, labels = c(month.name, "Undated"), ordered = TRUE))
 
 create_title <- function(s, n = 7) {
-  word_tokens <- tokenize_words(s, lowercase = FALSE, simplify = TRUE)
+  word_tokens <- tokenize_words(s, lowercase = FALSE, simplify = TRUE, stopwords = "unclear")
   section_brief <- paste0(word_tokens[1:n], collapse = " ")
   str_glue("{section_brief}...")
 }
@@ -40,7 +40,7 @@ transcriptions <- read_csv("mm-post-process.csv") %>%
     annotation_text = str_trim(str_replace_all(annotation_text, pattern = replacements))
   ) %>%
   arrange(year, month, file_name) %>%
-  slice(1:300)
+  slice(1:500)
 
 
 split_transcriptions <- transcriptions %>%
