@@ -104,7 +104,7 @@ produce_spread <- function(filename, text, image_path, user, completed, has_draw
 
   image_body <- str_glue("include_graphics('{image_path}')")
 
-  drawing_note <- if_else(has_drawing, "\\index{doodle}", "")
+  drawing_note <- if_else(has_drawing, "\\index{Drawings}", "")
 
   str_glue(
     "
