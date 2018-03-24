@@ -1,5 +1,5 @@
 bookdown::tufte_book2:
-  toc: no
-  number_sections: no
+  toc: yes
+  number_sections: yes
   includes:
     before_body: preamble.tex
