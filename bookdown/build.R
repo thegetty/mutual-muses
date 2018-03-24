@@ -67,13 +67,15 @@ produce_part <- function(components, partname) {
 }
 
 produce_chapter <- function(df, chapname) {
-  named_input <- list(filename = df$file_name,
-                      text = df$annotation_text,
-                      image_path = df$full_path)
-  c(
-    str_glue("# {chapname}"),
-    pmap(named_input, produce_spread)
-  )
+  if (nrow(df) > 0) {
+    named_input <- list(filename = df$file_name,
+                        text = df$annotation_text,
+                        image_path = df$full_path)
+    c(
+      str_glue("# {chapname}"),
+      pmap(named_input, produce_spread)
+    )
+  }
 }
 
 produce_spread <- function(filename, text, image_path) {
