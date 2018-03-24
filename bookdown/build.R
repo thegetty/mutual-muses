@@ -7,10 +7,15 @@ library(bookdown)
 library(fs)
 library(tokenizers)
 library(knitr)
+library(tufte)
+library(xtable)
+library(lubridate)
 
 unlink("_main.Rmd")
 
 image_directory <- "/Volumes/data_mdlincoln/MMpdfs/"
+
+mm_final <- read_csv("mm-final.csv")
 
 available_image_paths <- data_frame(full_path = dir_ls(image_directory, glob = "*.jpg", recursive = TRUE)) %>%
   mutate(
@@ -33,6 +38,9 @@ replacements <- c(
   "˚" = "º"
 )
 
+choice_final_data <- mm_final %>%
+  filter(selected_as_winning) %>%
+  select(subject_ids, classification_id, user_name, day_of)
 
 transcriptions <- read_csv("mm-post-process.csv") %>%
   inner_join(available_image_paths, by = "file_name") %>%
@@ -40,7 +48,12 @@ transcriptions <- read_csv("mm-post-process.csv") %>%
     annotation_text = str_trim(str_replace_all(annotation_text, pattern = replacements))
   ) %>%
   arrange(year, month, file_name) %>%
-  slice(1:500)
+  inner_join(choice_final_data, by = "subject_ids") %>%
+  mutate(
+    user_name = if_else(str_detect(user_name, "not-logged-in"), "an anonymous Zooniverse user", user_name),
+    day_of = format(day_of)) %>%
+  slice(1:50) %>%
+  mutate_at(vars(annotation_text, user_name), sanitize)
 
 
 split_transcriptions <- transcriptions %>%
@@ -70,7 +83,9 @@ produce_chapter <- function(df, chapname) {
   if (nrow(df) > 0) {
     named_input <- list(filename = df$file_name,
                         text = df$annotation_text,
-                        image_path = df$full_path)
+                        image_path = df$full_path,
+                        user = df$user_name,
+                        completed = df$day_of)
     c(
       str_glue("# {chapname}"),
       pmap(named_input, produce_spread)
@@ -78,12 +93,15 @@ produce_chapter <- function(df, chapname) {
   }
 }
 
-produce_spread <- function(filename, text, image_path) {
+produce_spread <- function(filename, text, image_path, user, completed) {
   titletext <- create_title(text)
   header <- str_glue("## {titletext}")
   body <- text
 
   parsed_path <- parse_path(filename)
+
+  safe_user <- str_replace_all(user, "\\\\", "\\\\\\\\")
+  margin_note <- str_glue("Transcribed by {safe_user} on {completed}.")
 
   caption <- str_glue("Series {parsed_path$year}.{parsed_path$letter}.{parsed_path$series}, box {parsed_path$box}, folder {parsed_path$folder}, sheet {parsed_path$sheet}")
 
@@ -93,6 +111,8 @@ produce_spread <- function(filename, text, image_path) {
 "
 
 {header}
+
+`r margin_note('{margin_note}')`
 
 {body}
 
