@@ -100,7 +100,7 @@ produce_spread <- function(filename, text, image_path, user, completed, has_draw
   safe_user <- str_replace_all(user, "\\\\", "\\\\\\\\")
   margin_note <- str_glue("Transcribed by {safe_user} on {completed}.")
 
-  caption <- str_glue("Series {parsed_path$year}.{parsed_path$letter}.{parsed_path$series}, box {parsed_path$box}, folder {parsed_path$folder}, sheet {parsed_path$sheet}")
+  caption <- str_glue("{parsed_path$year}.{parsed_path$letter}.{parsed_path$series}, box {parsed_path$box}, folder {parsed_path$folder}, sheet {parsed_path$sheet}")
 
   image_body <- str_glue("include_graphics('{image_path}')")
 
@@ -116,6 +116,8 @@ produce_spread <- function(filename, text, image_path, user, completed, has_draw
     {body}
 
     {drawing_note}
+
+    \\clearpage
 
     (ref:{ufn}) {caption}
 
