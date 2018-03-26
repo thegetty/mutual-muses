@@ -115,8 +115,6 @@ produce_spread <- function(filename, text, image_path, user, completed, has_draw
 
     {body}
 
-    {drawing_note}
-
     \\clearpage
 
     (ref:{ufn}) {caption}
