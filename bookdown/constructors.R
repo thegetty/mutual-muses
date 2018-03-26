@@ -13,7 +13,7 @@ doc_metadata <- function(partname) {
     title = str_glue("Mutual Muses {partname}"),
     subtitle = "The Correspondence of Lawrence Alloway and Sylvia Sleigh",
     author = list(
-      "The Zooniverse Mutual Muses Community"
+      "Getty Research Institute"
     ),
     date = as.character(Sys.Date())
   )
@@ -65,11 +65,56 @@ parse_path <- function(p) {
   )
 }
 
+produce_book_config <- function(title) {
+  config_list <- list(
+    book_filname = title,
+    delete_merged_file = TRUE,
+    output_dir = title
+  )
+  yaml_path <- tempfile(fileext = ".yml")
+  write_yaml(config_list, file = yaml_path)
+  return(yaml_path)
+}
+
+produce_volume <- function(title, rmd_path = "mutual_muses.Rmd", split_transcriptions) {
+
+  message("Writing ", title)
+  config_path <- produce_book_config(title)
+
+  spreads <- imap(split_transcriptions, ~ produce_part(.x, .y))
+
+  flat_spreads <- spreads %>%
+    flatten() %>%
+    flatten() %>%
+    flatten_chr()
+
+  write_lines(header(partname = title), path = rmd_path)
+  walk(flat_spreads, write_lines, path = rmd_path, append = TRUE)
+  render_book(input = rmd_path, config_file = config_path)
+  #system2("open", path_ext_set(path("_book", title), "pdf"))
+  return(list(TRUE))
+}
+
+set_part_number <- function(n) {
+  paste0("\\setcounter{part}{", n - 1, "}")
+}
+
+set_section_number <- function(n) {
+  paste0("\\setcounter{chapter}{", n - 1, "}")
+}
 
 produce_part <- function(components, partname) {
+
+  starting_part_number <- components[[1]][[1, "part_index"]]
+  starting_chapter_number <- components[[1]][[1, "chapter_index"]]
+
+  all_chapters <- imap(components, produce_chapter, partname = partname)
+
   c(
+    set_part_number(starting_part_number),
+    set_section_number(starting_chapter_number),
     str_glue("# (PART) {partname} {{-}}"),
-    imap(components, produce_chapter, partname = partname)
+    all_chapters
   )
 }
 
@@ -81,9 +126,11 @@ produce_chapter <- function(df, chapname, partname) {
                         user = df$user_name,
                         completed = df$day_of,
                         has_drawing = df$has_drawing)
+    all_spreads <- pmap(named_input, produce_spread)
+
     c(
       str_glue("# {chapname} {partname}"),
-      pmap(named_input, produce_spread)
+      all_spreads
     )
   }
 }
@@ -125,5 +172,3 @@ produce_spread <- function(filename, text, image_path, user, completed, has_draw
 
     ")
 }
-
-

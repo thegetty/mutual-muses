@@ -27,23 +27,13 @@ transcriptions <- read_csv("mm-post-process.csv") %>%
   inner_join(choice_final_data, by = "subject_ids") %>%
   mutate(
     user_name = if_else(str_detect(user_name, "not-logged-in"), "an anonymous Zooniverse user", user_name),
-    day_of = format(day_of)) %>%
-  # slice(1:50) %>%
+    day_of = format(day_of),
+    part_index = dense_rank(year),
+    chapter_index = group_indices(., year, month)) %>%
   mutate_at(vars(annotation_text, user_name), sanitize)
 
 split_transcriptions <- transcriptions %>%
   split(.$year) %>%
   map(~ split(., .$month))
 
-spreads <- imap(split_transcriptions, ~ produce_part(.x, .y))
-
-flat_spreads <- spreads %>% flatten() %>% flatten() %>% flatten_chr()
-
-rmd_path <- "mutual_muses.Rmd"
-
-write_lines(header(), path = rmd_path)
-
-walk(flat_spreads, ~ write_lines(., path = rmd_path, append = TRUE))
-
-system.time({render_book("mutual_muses.Rmd", output_format = "bookdown::tufte_book2")})
-system("open _book/_main.pdf")
+invisible(lmap(split_transcriptions, ~ produce_volume(title = names(.), split_transcriptions = .)))
