@@ -45,7 +45,8 @@ replacements <- c(
   " +" = " ",
   "\\t" = " ",
   "\\\\" = " ",
-  "˚" = "º"
+  "˚" = "º",
+  "^(\\d). " = "\\1 "
 )
 
 create_title <- function(s, n = 7) {
@@ -66,12 +67,14 @@ parse_path <- function(p) {
 }
 
 produce_book_config <- function(title) {
+
   config_list <- list(
-    book_filname = title,
+    book_filename = title,
     delete_merged_file = TRUE,
-    output_dir = title
+    output_dir = "mutual_muses_book"
   )
-  yaml_path <- tempfile(fileext = ".yml")
+
+  yaml_path <- "_bookdown.yml"
   write_yaml(config_list, file = yaml_path)
   return(yaml_path)
 }
@@ -90,7 +93,7 @@ produce_volume <- function(title, rmd_path = "mutual_muses.Rmd", split_transcrip
 
   write_lines(header(partname = title), path = rmd_path)
   walk(flat_spreads, write_lines, path = rmd_path, append = TRUE)
-  render_book(input = rmd_path, config_file = config_path)
+  render_book(input = rmd_path)
   #system2("open", path_ext_set(path("_book", title), "pdf"))
   return(list(TRUE))
 }
