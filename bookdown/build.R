@@ -33,7 +33,7 @@ transcriptions <- read_csv("mm-post-process.csv") %>%
   mutate_at(vars(annotation_text, user_name), sanitize)
 
 split_transcriptions <- transcriptions %>%
-  split(.$year) %>%
-  map(~ split(., .$month))
+  split(.$year, drop = TRUE) %>%
+  map(~ split(., .$month, drop = TRUE))
 
 invisible(lmap(split_transcriptions, ~ produce_volume(title = names(.), split_transcriptions = .)))
