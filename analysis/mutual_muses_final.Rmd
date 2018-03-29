@@ -472,6 +472,7 @@ winning_df <- transcription_classifications %>%
           file_name,
           subject_loaded_date,
           subject_retired_date,
+          day_of,
           is_retired,
           is_weekend,
           seconds_annotating,
