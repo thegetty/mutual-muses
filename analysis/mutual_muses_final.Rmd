@@ -454,14 +454,42 @@ transcription_ratios <- ratio_contained %>%
 winning_df <- transcription_classifications %>% 
   left_join(transcription_ratios, by = c("file_name", "classification_id")) %>% 
   left_join(all_dissimilarity, by = "file_name") %>% 
-  left_join(doc_has_special) %>% 
+  left_join(doc_has_special, by = "file_name") %>% 
   group_by(file_name) %>% 
   mutate(
     selected_as_winning = row_number(desc(median_ratio)) == 1,
     is_winning = ifelse(selected_as_winning, "winner", "loser")) %>%
   ungroup() %>% 
   arrange(file_name) %>% 
-  left_join(document_drawings, by = "file_name")
+  left_join(document_drawings, by = "file_name") %>% 
+  select(classification_id,
+          subject_ids,
+          user_name,
+          created_at,
+          started_on,
+          ended_on,
+          user_agent,
+          file_name,
+          subject_loaded_date,
+          subject_retired_date,
+          is_retired,
+          is_weekend,
+          seconds_annotating,
+          minutes_annotating,
+          n_annotations,
+          annotation_text,
+          contains_special,
+          clean_transcription,
+          charcount,
+          image_url,
+          median_ratio,
+          mean_dissimilarity,
+          median_dissimilarity,
+          had_one_special,
+          special_ratio,
+          selected_as_winning,
+          drawing_vote,
+          majority_vote)
 
 saveRDS(winning_df, "data/derived/all_with_winning.rds")
 write_csv(winning_df, path = "data/derived/all_with_winning.csv", na = "")
