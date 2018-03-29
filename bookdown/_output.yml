@@ -1,5 +1,5 @@
 bookdown::tufte_book2:
-  keep_tex: yes
+  keep_tex: no
   toc: yes
   toc_depth: 1
   number_sections: yes
