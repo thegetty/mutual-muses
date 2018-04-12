@@ -215,8 +215,8 @@ summarize_ratios <- function(doc) {
 ```
 
 ```{r read_zooniverse_files}
-raw_export <- read_csv("data/mutual-muses-classifications.csv", col_types = "icicicccccccci")
-subjects_export <- read_csv("data/mutual-muses-subjects.csv", col_types = "iiiiccicc")
+raw_export <- read_csv("../data/raw/mutual-muses-classifications.csv", col_types = "icicicccccccci")
+subjects_export <- read_csv("../data/raw/mutual-muses-subjects.csv", col_types = "iiiiccicc")
 
 # Do a preliminary parse of all data
 intermediate_process <- parse_zooniverse_metadata(raw_export)
