@@ -3,7 +3,6 @@
 
 The Getty Research Institute would like to recognize all of the volunteers who contributed to the Mutual Muses project. This community-driven project would not have been possible without the commitment and time generously given by these contributors. 
 
-user_name\
 2416837397\
 _BOB_\
 _joebowman\
