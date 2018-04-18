@@ -484,7 +484,6 @@ winning_df <- transcription_classifications %>%
           charcount,
           image_url,
           median_ratio,
-          mean_dissimilarity,
           median_dissimilarity,
           had_one_special,
           special_ratio,
