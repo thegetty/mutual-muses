@@ -384,7 +384,8 @@ trans_corpus %>%
 
 ## Pairwise-similarity summaries
 
-The levels of transcription similarity/dissimilarity are in line with both our beta results as well as the mid-stream check-in. The vast majority of docs had largely agreeable transcriptions.
+To select a "best" transcription for each document, we take the tokenized documents and, for every pairwise combo of transcriptions for that document, calculated the ratio of tokens that one transcription contained of the other. 
+The transcription with the highest median ratio of tokens thus contains high percentages of all the other documents, indicating both high information as well as high consensus with the rest of the group. We used this metric as a way to select a winning transcription for each document.
 
 ```{r all_pairwise_similarity}
 # For each document, compare the jaccard dissimiliarity of its transcriptions
@@ -424,6 +425,9 @@ ratio_contained <- trans_corpus %>%
 
 ## Drawings
 
+Each file had 3 votes for the question "is there a drawing?" The vast majority of votes were unanimous, with just `r nrow(contested_docs)` docs having conflicting answers.
+We selected the majority vote as the final classification for that document.
+
 ```{r contested_drawings}
 document_drawings <- drawing_classifications %>% 
   group_by(file_name) %>% 
@@ -439,7 +443,6 @@ contested_docs <- document_drawings %>%
   filter(!drawing_vote %in% c(0, 1))
 ```
 
-Each file had 3 votes for the quesiton "is there a drawing?" The vast majority of votes were unanimous, with just `r nrow(contested_docs)` docs having conflicting answers.
 
 ```{r find_winning_transcriptions}
 # For each document, find the transcription with the highest median ratio
