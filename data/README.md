@@ -55,7 +55,7 @@ We collected three votes per image, and then used the majority vote to flag a gi
 ### License
 
 
-The transcription and indexing data produced from this project are offered under Creative Commons [CC0 1.0 Universal license](https://creativecommons.org/licenses/by-nc/4.0/legalcode). 
+The transcription and indexing data produced from this project are offered under Creative Commons [CC0 1.0 Universal license](https://creativecommons.org/publicdomain/zero/1.0/). 
 
 If you create a derivative dataset from a Mutual Muses dataset, we ask that you consider releasing the derivative under the least restrictive license possible.
 
