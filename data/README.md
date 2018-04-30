@@ -59,9 +59,6 @@ The transcription and indexing data produced from this project are offered under
 
 If you create a derivative dataset from a Mutual Muses dataset, we ask that you consider releasing the derivative under the least restrictive license possible.
 
-Images of the correspondence are © J. Paul Getty Trust and are not included in the Creative Commons [license/dedication], but may be downloaded for personal, noncommercial use.
-
-
 ### Attribution
 
 We respectfully ask that you acknowledge the Getty Research Institute® and Zooniverse® as sources wherever possible, in order to preserve links to the datasets. By providing acknowledgment or citation, you enable others to verify, replicate, and further explore your presentation and interpretation of our data.
