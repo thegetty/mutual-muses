@@ -45,11 +45,11 @@ We have generated PDF files with images and corresponding to selected transcript
 * [1952](https://getty.box.com/s/kit6gcdmaa1yx3lvn6whr9eq5n12g9rp) 
 * [1953](https://getty.box.com/s/1hjt1ob4w63if5f6ovq762ysw6bjvks9) 
 
-A 1.8 GB zip file containing image files of the correspondence used for this project is available [here](https://getty.box.com/shared/static/429y88z56v4q7ebced8n8g0031b5kl2z.zip) 
+A 1.8 GB zip file containing image files of the correspondence used for this project is available [here](https://getty.box.com/shared/static/429y88z56v4q7ebced8n8g0031b5kl2z.zip).
 
 You do not need a Box account to access the files. 
 
-Individual sheet images can also be browsed on the [Getty Research Institute’s collections database](http://hdl.handle.net/10020/alloway_sleigh)
+Individual sheet images can also be browsed on the [Getty Research Institute’s collections database](http://hdl.handle.net/10020/alloway_sleigh).
 
 ## License 
 
