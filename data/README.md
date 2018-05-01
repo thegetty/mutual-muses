@@ -3,11 +3,22 @@
 **N.B. STILL IN PROGRESS**
 
 ### Table of contents
-* [Datasets](#datasets)
-* [Usage guidelines](#usage-guidelines)
-* [License](#license)
-* [General editorial guidelines](#general-editorial-guidelines)
-* [Data dictionary](#data-dictionary)
+
+- [Datasets](#datasets)
+- [Description](#description)
+  - [Data collection](#data-collection)
+  - [Post processing script](#post-processing-script)
+  - [Data cleaning](#data-cleaning)
+  - [Drawing identification](#drawing-identification)
+- [Usage guidelines](#usage-guidelines)
+  - [License](#license)
+  - [Attribution](#attribution)
+  - [Data Integrity/DISCLAIMER OF WARRANTIES](#data-integrity-disclaimer-of-warranties)
+  - [Trademark Policy/No Endorsement](#trademark-policy-no-endorsement)
+- [Data dictionary](#data-dictionary)
+  - [analyzed_data](#analyzed-data)
+  - [selected_transcriptions](#selected-transcriptions)
+  
 
 ## Datasets 
 

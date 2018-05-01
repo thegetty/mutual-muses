@@ -6,8 +6,6 @@
 
 ### Table of contents 
 
-<!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:0 orderedList:0 -->
-
 - [Introduction](#introduction)
 - [Repository structure](#repository-structure)
   - [analysis/](#analysis)
