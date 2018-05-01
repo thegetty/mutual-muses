@@ -1,7 +1,5 @@
 # Mutual Muses crowdsourced transcription data 
 
-**N.B. STILL IN PROGRESS**
-
 ### Table of contents
 
 - [Datasets](#datasets)
