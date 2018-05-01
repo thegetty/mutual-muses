@@ -74,7 +74,7 @@ We respectfully ask that you acknowledge the Getty Research Institute® and Zoon
 
 Suggested citation:
 
->Getty Research Institute and the Zooniverse User Community, “Mutual Muses: transcription data of correspondence from the the Lawrence Alloway and Sylvia Sleigh correspondence”, Getty Research Institute, Los Angeles (ADD PUBLICATION DATE). https://github.com/thegetty/mutual-muses/releases/tag/v1. 
+>Getty Research Institute and the Zooniverse User Community, “Mutual Muses: transcription data of correspondence from the the Lawrence Alloway and Sylvia Sleigh correspondence”, Getty Research Institute, Los Angeles (May, 2018). https://github.com/thegetty/mutual-muses/releases/tag/v1.
 
 ### Data Integrity/DISCLAIMER OF WARRANTIES
 
