@@ -54,7 +54,7 @@ The results of this script are in `data/analyzed_transcriptions.csv`
 
 After a transcription was selected for each document, Getty Research Institute staff conducted several cleaning tasks that are reflected in the`data/selected_transcriptions.csv` dataset. Spelling errors were corrected using a spell check tool across the entire dataset. Diacritics and currency symbols were manually entered for 222 transcriptions in which the majority users indicated the document contained diacritics (staff used an average of scores gathered from multiple transcriptions to identify the selected transcriptions with diacritics, between 1.0-0.67). Staff conducted additional cleaning of commonly misspelled proper names for people and locations across the dataset. 
 
-Note that data cleaning and standardization was not comprehensively executed across the dataset, other than spell check. 
+Note that data cleaning was not comprehensively executed across the dataset, other than spell check. 
 
 ### Drawing identification 
 
