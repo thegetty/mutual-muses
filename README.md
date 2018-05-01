@@ -39,6 +39,8 @@ This directory contains code for producing the PDF compilations of edited transc
 
 This directory contains the raw data exports from Zooniverse, as well as processed data from the analysis stage with documentation on data collection and processing and data dictionaries for processed data.
 
+This directory also contains detailed data dictionaries, discussion of methodology, and usage guidelines for the data.
+
 ## Files 
 
 We have generated PDF files with images and corresponding to selected transcriptions for each year of correspondence. 
