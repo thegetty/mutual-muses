@@ -55,12 +55,9 @@ We collected three votes per image, and then used the majority vote to flag a gi
 ### License
 
 
-The transcription and indexing data produced from this project are offered under Creative Commons [CC0 1.0 Universal license](https://creativecommons.org/publicdomain/zero/1.0/). 
+The transcription and indexing data produced from this project are offered under Creative Commons [CC0 1.0 Universal Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/). 
 
 If you create a derivative dataset from a Mutual Muses dataset, we ask that you consider releasing the derivative under the least restrictive license possible.
-
-Images of the correspondence are © J. Paul Getty Trust and are not included in the Creative Commons [license/dedication], but may be downloaded for personal, noncommercial use.
-
 
 ### Attribution
 
