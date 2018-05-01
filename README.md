@@ -6,9 +6,18 @@
 
 ### Table of contents 
 
-* [Introduction](#introduction)
-* [Repository structure](#repository-structure)
+<!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:0 orderedList:0 -->
 
+- [Introduction](#introduction)
+- [Repository structure](#repository-structure)
+  - [analysis/](#analysis)
+  - [docs/](#docs)
+  - [bookdown/](#bookdown)
+  - [data/](#data)
+- [Files](#files)
+- [License](#license)
+- [Maintenance](#maintenance)
+- [Acknowledgements](#acknowledgements)
 
 ## Introduction
 
@@ -64,4 +73,4 @@ Please note that these data and related tools were created as part of the Mutual
 
 The Getty Research Institute would like to thank all of the volunteers who contributed transcriptions to the Mutual Muses project. This community-driven project would not have been possible without the commitment and time generously given by our volunteers. See the CONTRIBUTORS.md file for details.
 
-This publication uses data generated via the [Zooniverse](http://www.zooniverse.org) platform (http://www.zooniverse.org), development of which is funded by generous support, including a Global Impact Award from Google, and by a grant from the Alfred P. Sloan Foundation. Zooniverse is an open-source, “citizen science” platform that facilitates collaboration between volunteers and researchers working on data collection research projects. 
+This publication uses data generated via the [Zooniverse](http://www.zooniverse.org) platform (http://www.zooniverse.org), development of which is funded by generous support, including a Global Impact Award from Google, and by a grant from the Alfred P. Sloan Foundation. Zooniverse is an open-source, "citizen science" platform that facilitates collaboration between volunteers and researchers working on data collection research projects. 
