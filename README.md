@@ -38,12 +38,12 @@ This directory contains the raw data exports from Zooniverse, as well as process
 
 We have generated PDF files with images and corresponding to selected transcriptions for each year of correspondence. 
 
-* [1948](https://getty.box.com/s/hsdgjn50k08850aue4w3rsxt6hj9hjqp) 
-* [1949](https://getty.box.com/s/iw2xfj7zyvy3edf0dyyikd0ao91qtbdm) 
-* [1950](https://getty.box.com/s/cutm2p9pec2j4tkuwu5z9mv2g24kfcc9) 
-* [1951](https://getty.box.com/s/ge0ki5jike4desvvteyfz5gjc7vbcg1f) 
-* [1952](https://getty.box.com/s/kit6gcdmaa1yx3lvn6whr9eq5n12g9rp) 
-* [1953](https://getty.box.com/s/1hjt1ob4w63if5f6ovq762ysw6bjvks9) 
+* [1948](https://getty.box.com/shared/static/hsdgjn50k08850aue4w3rsxt6hj9hjqp.pdf) 
+* [1949](https://getty.box.com/shared/static/iw2xfj7zyvy3edf0dyyikd0ao91qtbdm.pdf) 
+* [1950](https://getty.box.com/shared/static/cutm2p9pec2j4tkuwu5z9mv2g24kfcc9.pdf) 
+* [1951](https://getty.box.com/shared/static/ge0ki5jike4desvvteyfz5gjc7vbcg1f.pdf) 
+* [1952](https://getty.box.com/shared/static/kit6gcdmaa1yx3lvn6whr9eq5n12g9rp.pdf) 
+* [1953](https://getty.box.com/shared/static/1hjt1ob4w63if5f6ovq762ysw6bjvks9.pdf) 
 
 A 1.8 GB zip file containing image files of the correspondence used for this project is available [here](https://getty.box.com/shared/static/429y88z56v4q7ebced8n8g0031b5kl2z.zip).
 
